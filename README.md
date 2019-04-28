@@ -152,3 +152,196 @@ No npm, existe uma série de TypeScript definitons files para as mais diversas b
 https://www.npmjs.com/package/@types/jquery
 
 Para remover os comentarios dos arquivos JS de produção  "removeComments": true
+
+TypeScript tem namespaces
+
+Ex : 
+
+namespace Views{
+
+    export abstract class View<T>{
+
+        protected _elemento : JQuery
+    
+        constructor(selector : string){
+            this._elemento = $(selector);
+        }
+    
+        update(model : T) : void {
+            this._elemento.html(this.template(model));
+        }
+    
+        abstract template(model: T) : string;    
+    }
+
+}
+
+ES2015 modules
+
+Imports removidos do index delegando o gerenciamento de dependencias
+
+No index 
+
+<script src="lib/system.js"></script>
+<script>
+     System.defaultJSExtensions = true;
+    System.import('js/app.js').catch(err => console.error(err));
+</script>
+
+{
+    "compilerOptions": {
+        "target": "es6",
+        "outDir": "alurabank/app/js",
+        "noEmitOnError": true,
+        "noImplicitAny": true,
+        "removeComments": true,
+        "module": "system"
+    },
+    "include": [
+        "alurabank/app/ts/**/*"
+    ],
+    "exclude": [
+        "alurabank/app/js"
+    ]
+}
+
+Loaders usam XMLHttpRequest, ou seja, realizam requisições Ajax para baixar os módulos e para isso precisamos de um servidor que disponibiliza nossa aplicação para o browser.
+
+É o responsável pelo carregamento do módulo principal da aplicação. A partir desse módulos todas as suas dependências são resolvidas dinamicamente, sem a necessidade de termos que importar cada script individualmente seguindo uma ordem de importação definida.
+
+
+Como vimos, precisamos servir nossa aplicação através de um servidor web. Utilizaremos o lite-server. Além dele servir a pasta alurabanl/app para nós, ele ainda suporta livereloading através do BrowserSync que traz embutido. Isso é perfeito, pois toda vez que os arquivos .ts forem modificados e os arquivos .js gerados nosso navegador automaticamente será recarregado.
+
+
+Como vimos, precisamos servir nossa aplicação através de um servidor web. Utilizaremos o lite-server. Além dele servir a pasta alurabanl/app para nós, ele ainda suporta livereloading através do BrowserSync que traz embutido. Isso é perfeito, pois toda vez que os arquivos .ts forem modificados e os arquivos .js gerados nosso navegador automaticamente será recarregado.
+
+Dentro da pasta alurabank, vamos instalar o lite-server`:
+
+npm install lite-server@2.3.0 --save-dev
+
+{
+  "name": "alurabank",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "tsc",
+    "start": "tsc -w",
+    "server": "lite-server --baseDir=app"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jquery": "^2.0.42",
+    "lite-server": "^2.3.0",
+    "typescript": "^2.3.2"
+  }
+}
+
+Vamos instalar o módulo concurrently. Ele nos permitirá rodar os dois scripts que criamos em paralelo nas plataformas Windows, MAC e Linux.
+
+Dentro da pasta alurabank vamos executar o comando:
+
+npm install concurrently@3.4.0 --save-dev
+
+Rodando scripts paralelamente com o módulo concurrently
+Vamos instalar o módulo concurrently. Ele nos permitirá rodar os dois scripts que criamos em paralelo nas plataformas Windows, MAC e Linux.
+
+Dentro da pasta alurabank vamos executar o comando:
+
+npm install concurrently@3.4.0 --save-dev
+Agora, vamos renomear o script "start" para "watch" e adicionar novamente o script "start" que chamará o módulo concurrently:
+
+{
+  "name": "alurabank",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "tsc",
+    "watch": "tsc -w",
+    "server": "lite-server --baseDir=app",
+    "start": "concurrently \"npm run watch\" \"npm run server\""
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jquery": "^2.0.42",
+    "concurrently": "^3.4.0",
+    "lite-server": "^2.3.0",
+    "typescript": "^2.3.2"
+  }
+}
+
+barrel
+
+export * from './modulo-a';
+export * from './module-b';
+export * from './module-c';
+ 
+Correto. O barril não exporta nada de novo, apenas artefatos de outros módulos.
+
+
+o TypeScript possui um atalho para declaração de propriedades somente leitura. Para isso, basta usarmos o modificador readonly.
+
+export class Negociacao {
+
+    constructor(readonly data: Date, readonly quantidade: number, readonly valor: number) {}
+
+    get volume() {
+
+        return this.quantidade * this.valor;
+    }
+}
+Veja que não foi necessário criar os getters para que pudéssemos acessar as propriedades que antes eram privadas. Agora, qualquer atribuição feita às propriedades resultarão em erro de compilação.
+
+optional exemplo : 
+
+export abstract class View<T> {
+
+    protected _elemento: JQuery;
+    private _escape: boolean;
+
+   // tornando  o parâmetro opcional!
+    constructor(seletor: string, escapar?: boolean) {
+
+        this._elemento = $(seletor);
+        this._escapar = escapar;
+    }
+
+Tem que ser os ultimos do contrutor
+
+Definindo o valor default : 
+
+export abstract class View<T> {
+
+    protected _elemento: JQuery;
+    private _escape: boolean;
+
+   // tornando  o parâmetro opcional!
+    constructor(seletor: string, escapar: boolean = false) {
+
+        this._elemento = $(seletor);
+        this._escapar = escapar;
+    }
+
+o TypeScript possui o modo strickNullChecks. Neste modo, null e undefined não fazem parte do domínio dos tipos e só podem ser atribuídos a eles mesmos. Com a exceção de undefined, que pode ser atribuído a void. Isso pode ser interessante para evitarmos valores nulos e indefinidos em nosso projeto.
+
+Vamos ativá-lo em tsconfig.json:
+
+"strictNullChecks": true
+
+Podemos indicar que a função pode devolver mais de um tipo, no caso ela devolverá boolean ou null:
+
+// deixarmos explícitos que a função pode retornar boolean ou null
+function minhaFuncao(flag: boolean): boolean | null{
+
+    let valor = null;
+    if(flag) return null;
+    return true;
+}
+
+let x = minhaFuncao(false);
+Agora, como explicitamos que seu retorno pode ser também null, nosso código passará pelo strictNullChecks. Curiosamente, linguagens como a Golang permitem uma função ou método ter mais de um tipo de retorno.
