@@ -345,3 +345,178 @@ function minhaFuncao(flag: boolean): boolean | null{
 
 let x = minhaFuncao(false);
 Agora, como explicitamos que seu retorno pode ser também null, nosso código passará pelo strictNullChecks. Curiosamente, linguagens como a Golang permitem uma função ou método ter mais de um tipo de retorno.
+
+
+Para saber mais: o tipo never
+
+TypeScript possui um tipo curioso, o tipo never. Este tipo é aplicável à métodos ou funções que por algum motivo, planejado ou não, podem não terminar sua execução de seu bloco.
+
+Exemplos clássicos são os de métodos que caem em um loop infinito ou de métodos que sempre retornam exceções. Exceções fazem com que o método não execute até o fim.
+
+Não confundir o tipo never com o tipo void. O segundo, apesar de indicar que a função ou método nada retorna, indica que a função ou método executará até o fim, mesmo que não retorne nada.
+
+Geralmente não usamos esse tipo em nosso código, mas ele pode aparecer como aviso do compilador. Quando aparecer, você já saberá que a execução do seu método nunca chegará até o fim, sendo um forte indicativo de um bug em seu código.
+
+Exemplo de enum em typscript
+
+enum DiaDaSemana {
+    Domingo,
+    Segunda,
+    Terca,
+    Quarta, 
+    Quinta, 
+    Sexta, 
+    Sabado, 
+}
+Por padrão, o valor de cada um começa de 0 e vai até 6, pois Sabado é o sétimo elemento.
+
+Metodo para recuperra o  date now em ms
+
+performance.now();
+
+Decorators no TypeScript
+
+"experimentalDecorators": true no arquivo tsconfig.json.
+
+Exemplo : 
+
+export function logarTempoDeExecucao(emSegundos: boolean = false){
+
+    return function(target : any, propertyKey : string, descriptor : PropertyDescriptor){
+        const metodoOriginal = descriptor.value
+        
+        descriptor.value = function(...args : any[]){
+
+            let divisor = 1;
+            let unidade = 'milisegundos'
+            if(emSegundos) {
+                divisor = 1000;
+                unidade = 'segundos';
+            }
+
+            console.log('-----------------------')
+            console.log(`Parâmetros do método ${propertyKey}: ${JSON.stringify(args)}`);
+            const tempo_inicio = performance.now();
+            const resultado = metodoOriginal.apply(this, args);
+            console.log(`Resultado do método: ${JSON.stringify(resultado)}` )
+
+            const tempo_fim = performance.now();
+            console.log(`Tempo de execução do metodo ${propertyKey} foi ${(tempo_fim - tempo_inicio)/divisor} ${unidade});
+            return resultado;
+        }
+    }
+}
+
+Exemplo de decorator de injeção para lazy loading
+
+export function domInject(seletor: string) {
+
+    return function(target: any, key: string) {
+
+        let elemento: JQuery;
+
+        const getter = function() {
+
+            if(!elemento) {
+                console.log(`buscando  ${seletor} para injetar em ${key}`);
+                elemento = $(seletor);
+            }
+
+            return elemento;
+        }
+    }
+}
+
+mas como faremos a substituição da propriedade alvo do decorator pelo getter que criamos? Faremos isso com auxílio de Object.defineProperty:
+
+
+export function domInject(seletor: string) {
+
+    return function(target: any, key: string) {
+
+        let elemento: JQuery;
+
+        const getter = function() {
+
+            if(!elemento) {
+                console.log(`buscando  ${seletor} para injetar em ${key}`);
+                elemento = $(seletor);
+            }
+
+            return elemento;
+        }
+
+       Object.defineProperty(target, key, {
+           get: getter
+       });
+    }
+}
+
+@domInject('#data')
+private _inputData: JQuery;
+
+Agora, em app/ts/app.ts vamos associar o clique do botão com a chamada do novo método:
+
+import { NegociacaoController } from './controllers/NegociacaoController';
+
+const controller = new NegociacaoController();
+$('.form').submit(controller.adiciona.bind(controller));
+$('#botao-importa').click(controller.importarDados.bind(controller));
+
+Exemplo de chamada de serviço com Typescript:
+
+    importarDados() {
+
+        function isOK(res: Response) {
+
+            if(res.ok) {
+                return res;
+            } else {
+                throw new Error(res.statusText);
+            }
+        }
+
+        fetch('http://localhost:8080/dados')
+            .then(res => isOK(res))
+            .then(res => res.json())
+            .then((dados: any[]) => {
+                dados
+                    .map(dado => new Negociacao(new Date(), dado.vezes, dado.montante))
+                    .forEach(negociacao => this._negociacoes.adiciona(negociacao));
+                this._negociacoesView.update(this._negociacoes);
+            })
+            .catch(err => console.log(err.message));       
+    }
+
+  
+
+  Definição de Interfaces Ex : 
+
+  export interface NegociacaoParcial{
+    vezes : number;
+    montante : number;
+}
+
+throttle serve para proteger o backend para evitar multiplas chmadas desnecessáriamente 
+
+Exemplo : 
+
+export function throttle(milissegundos = 500) {
+
+    return function(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+
+        const metodoOriginal = descriptor.value;
+
+        let timer = 0;
+
+        descriptor.value = function(...args: any[]) {
+            if(event) event.preventDefault();
+            clearInterval(timer);
+            timer = setTimeout(() => metodoOriginal.apply(this, args), milissegundos);
+        }
+
+        return descriptor;
+    }
+}
+
+Veja também que o TypeScript sabe que event é uma variável implícita que pode existir ou não em uma função e por isso adota o tipo implícito Event, fantástico!

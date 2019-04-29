@@ -1,28 +1,30 @@
 import { NegociacoesView, MensagemView } from '../views/index';
-import { Negociacao, Negociacoes } from '../models/index';
+import { Negociacao, Negociacoes, NegociacaoParcial } from '../models/index';
+import { logarTempoDeExecucao, domInject } from '../helpers/decorators/index'
 
 export class NegociacaoController {
 
+    @domInject('#data')
     private _inputData: JQuery;
+    
+    @domInject('#quantidade')
     private _inputQuantidade: JQuery;
+    
+    @domInject('#valor')
     private _inputValor: JQuery;
+
     private _negociacoes = new Negociacoes();
     private _negociacoesView = new NegociacoesView('#negociacoesView');
     private _mensagemView = new MensagemView('#mensagemView');
     
     constructor() {
-        this._inputData = $('#data');
-        this._inputQuantidade = $('#quantidade');
-        this._inputValor = $('#valor');
         this._negociacoesView.update(this._negociacoes);
     }
 
     adiciona(event: Event) {
 
-        const tempo_inicio = performance.now();
-
         event.preventDefault();
-        
+
         let data = new Date(this._inputData.val().replace(/-/g, ','));
 
         if(!this._ehDiaUtil(data)) {
@@ -43,8 +45,29 @@ export class NegociacaoController {
         this._mensagemView.update('Negociação adicionada com sucesso!');
 
         const tempo_fim = performance.now();
-        console.log(`Tempo de execução do metodo adiciona ${tempo_fim - tempo_inicio} ms`);
-        
+    }
+
+    importaDados() {
+
+        function isOK(res: Response) {
+
+            if(res.ok) {
+                return res;
+            } else {
+                throw new Error(res.statusText);
+            }
+        }
+
+        fetch('http://localhost:8080/dados')
+            .then(res => isOK(res))
+            .then(res => res.json())
+            .then((dados: NegociacaoParcial[]) => {
+                dados
+                    .map(dado => new Negociacao(new Date(), dado.vezes, dado.montante))
+                    .forEach(negociacao => this._negociacoes.adiciona(negociacao));
+                this._negociacoesView.update(this._negociacoes);
+            })
+            .catch(err => console.log(err.message));       
     }
 
     private _ehDiaUtil(data: Date) {

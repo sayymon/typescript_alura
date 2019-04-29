@@ -1,14 +1,15 @@
 {
     "compilerOptions": {
         "target": "es6",
-        "outDir": "app/js",
+        "outDir": "alurabank/app/js",
         "noEmitOnError": true, 
         "noImplicitAny": true,
         "removeComments": true,
         "module": "system",
-        "strictNullChecks": true
+        "strictNullChecks": true,
+        "experimentalDecorators": true
     },
     "include": [
-        "app/ts/**/*"
+        "alurabank/app/ts/**/*"
     ]
 }
