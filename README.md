@@ -520,3 +520,15 @@ export function throttle(milissegundos = 500) {
 }
 
 Veja também que o TypeScript sabe que event é uma variável implícita que pode existir ou não em uma função e por isso adota o tipo implícito Event, fantástico!
+
+arrow function 
+
+() : {}
+
+Exemplo de interface para receber functions como parametro
+
+export interface HandlerFunction{
+
+    (res: Response) : Response;
+
+}

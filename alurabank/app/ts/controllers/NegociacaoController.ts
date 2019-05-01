@@ -1,6 +1,8 @@
 import { NegociacoesView, MensagemView } from '../views/index';
 import { Negociacao, Negociacoes, NegociacaoParcial } from '../models/index';
 import { logarTempoDeExecucao, domInject } from '../helpers/decorators/index'
+import { NegociacaoService } from '../services/index';
+import { imprime } from '../helpers/Utils';
 
 export class NegociacaoController {
 
@@ -16,7 +18,8 @@ export class NegociacaoController {
     private _negociacoes = new Negociacoes();
     private _negociacoesView = new NegociacoesView('#negociacoesView');
     private _mensagemView = new MensagemView('#mensagemView');
-    
+    private _negociacaoService = new NegociacaoService();
+
     constructor() {
         this._negociacoesView.update(this._negociacoes);
     }
@@ -41,6 +44,8 @@ export class NegociacaoController {
 
         this._negociacoes.adiciona(negociacao);
 
+        imprime(negociacao,this._negociacoes);
+
         this._negociacoesView.update(this._negociacoes);
         this._mensagemView.update('Negociação adicionada com sucesso!');
 
@@ -58,16 +63,24 @@ export class NegociacaoController {
             }
         }
 
-        fetch('http://localhost:8080/dados')
-            .then(res => isOK(res))
-            .then(res => res.json())
-            .then((dados: NegociacaoParcial[]) => {
-                dados
-                    .map(dado => new Negociacao(new Date(), dado.vezes, dado.montante))
+        this._negociacaoService
+            .obterNegociacoes(isOK)
+            .then(negociacoesParaImportar => {
+                
+                const negociacoesJaImportadas = this._negociacoes.paraArray();
+
+                                
+                if(negociacoesParaImportar) {
+                    negociacoesParaImportar
+                    .filter(negociacao => !negociacoesJaImportadas.some(jaImportada => negociacao.ehIgual(jaImportada)))
                     .forEach(negociacao => this._negociacoes.adiciona(negociacao));
-                this._negociacoesView.update(this._negociacoes);
-            })
-            .catch(err => console.log(err.message));       
+
+                    this._negociacoesView.update(this._negociacoes);
+                }
+            }).catch(err => {
+                this._mensagemView.error(err.message)
+            });
+    
     }
 
     private _ehDiaUtil(data: Date) {

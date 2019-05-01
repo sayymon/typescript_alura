@@ -9,11 +9,17 @@ System.register([], function (exports_1, context_1) {
                 constructor() {
                     this._negociacoes = [];
                 }
+                paraTexto() {
+                    console.log(JSON.stringify(this._negociacoes));
+                }
                 adiciona(negociacao) {
                     this._negociacoes.push(negociacao);
                 }
                 paraArray() {
                     return [].concat(this._negociacoes);
+                }
+                ehIgual(negociacoes) {
+                    return JSON.stringify(negociacoes.paraArray()) == JSON.stringify(this._negociacoes);
                 }
             };
             exports_1("Negociacoes", Negociacoes);
