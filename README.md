@@ -532,3 +532,125 @@ export interface HandlerFunction{
     (res: Response) : Response;
 
 }
+
+Exemplo de Filter em JS
+:
+
+negociacoesParaImportar
+                    .filter(negociacao => 
+                        !negociacoesJaImportadas.some(jaImportada => 
+                            negociacao.ehIgual(jaImportada)))
+                    .forEach(negociacao => 
+                    this._negociacoes.adiciona(negociacao));
+
+Interfaces podem herdar de quantas interfaces forem necessárias
+
+
+TypeScript não é uma linguagem exclusiva para frontend, ela pode ser usada também no backend com Node.js. Contudo, como existem milhares (sem exagero) de módulos criados no repositório do npm (um dos maiores do mundo), as chances dos módulos da sua aplicação não terem seu respectivo TypeScript Definition file são gigantes. A única garantia que você terá são as definições dos módulos padrões do Node.js:
+
+npm install @types/node --save-dev
+
+Como fica o tsconfig.json?
+Outro ponto importante, aliás, uma dica, é evitarmos o uso do strictNullChecks e do noImplicityAny. Caso estejam presentes no arquivo tsconfig.js seus valores devem ser false. A ativação dessas configurações poderá gerar inúmeros problemas com possíveis definições que você venha a baixar.
+
+Como fica o sistema de módulos?
+Os módulos do Node.js usam o padrão commonjs. Felizmente o compilador TypeScript aceita este parâmetro na propriedade module do arquivo tsconfig.json.
+
+Vejamos um exemplo de arquivo que configura o TypeScript para um ambiente Node.js:
+
+{
+    "compilerOptions": {
+        "target": "es6",
+        "outDir": "js",
+        "noEmitOnError": true, 
+        "noImplicitAny": false,
+        "removeComments": true,
+        "module": "commonjs",
+        "strictNullChecks": false,
+        "experimentalDecorators": true
+    },
+    "include": [
+        "ts/**/*"
+    ]
+}
+Há mais um detalhe importante.
+
+Como realizaremos os imports?
+Vejamos um código escrito sem TypeScript. Ele nada mais faz do que criar um novo arquivo no sistema de arquivos:
+
+const { writeFile } = require('fs');
+
+writeFile('teste.txt', 'Gravei no arquivo', err => {
+    if(err) {
+        return console.log('Não foi possível criar o arquivo');
+    }
+    console.log('arquivo criado com sucesso');
+});
+No entanto, quando estamos usando TypeScript, precisamos mudar a forma com que importamos nossos módulos:
+
+// veja a diferença
+
+import { writeFile } from 'fs';
+
+writeFile('teste.txt', 'Gravei no arquivo', err => {
+    if(err) {
+        return console.log('Não foi possível criar o arquivo');
+    }
+    console.log('arquivo criado com sucesso');
+});
+Por debaixo dos panos o TypeScript transcompilará o arquivo para:
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const fs_1 = require("fs");
+fs_1.writeFile('teste.txt', 'Gravei no arquivo', err => {
+    if (err) {
+        return console.log('Não foi possível criar o arquivo');
+    }
+    console.log('arquivo criado com sucesso');
+});
+Para um codebase já existente, realizar essa mudança pode ser algo muito custoso.
+
+TypeScript se baseia no ES2015, todavia, na versão ES2017 foi introduzida a sintaxe async/await. Ela funciona da seguinte maneira. Dentro de uma uma função ou método async, isto é, uma função ou método declarado como async NomeDoMetodoOuFuncao, podemos tratar o retorno de promises de uma maneira muito especial.
+
+Por padrão, capturamos o retorno de uma promise dentro da função then. Mas se dentro de uma função async, usamos a instrução await antes da chamada de um método que retorne uma promise, podemos capturar seu retorno sem a necessidade da chamada de then, como se ela fosse uma função síncrona tradicional.
+
+Vejamos um exemplo:
+
+// o método importDados é um método async!
+
+    @throttle()
+    async importaDados() {
+
+        try {
+
+           // usou await antes da chamada de this.service.obterNegociacoes()
+
+            const negociacoesParaImportar = await this._service
+                .obterNegociacoes(res => {
+
+                    if(res.ok) {
+                        return res;
+                    } else {
+                        throw new Error(res.statusText);
+                    }
+                });
+
+            const negociacoesJaImportadas = this._negociacoes.paraArray();
+
+            negociacoesParaImportar
+                .filter(negociacao => 
+                    !negociacoesJaImportadas.some(jaImportada => 
+                        negociacao.ehIgual(jaImportada)))
+                .forEach(negociacao => 
+                this._negociacoes.adiciona(negociacao));
+
+            this._negociacoesView.update(this._negociacoes);
+
+        } catch(err) {
+            this._mensagemView.update(err.message);
+        }
+    }
+Mas se não chamamos mais then, não chamaremos também catch, certo? Então, como conseguiremos tratar possíveis erros? Quando usamos async/wait, por mais que o código seja assíncrono, podemos usar try e catch para lidar com possíveis exceções em nosso código. Por mais que nosso código pareça um código síncrono, ele continua sendo um código assíncrono.
+
+A boa notícia é que mesmo o TypeScript suportando apenas o ES2015 ele introduziu em sua sintaxe o async/await do ES2017 a partir da sua versão 2.3. Isso não quer dizer que somos obrigados a utilizá-la, mas seu uso melhor bastante a legibilidade do nosso código.
